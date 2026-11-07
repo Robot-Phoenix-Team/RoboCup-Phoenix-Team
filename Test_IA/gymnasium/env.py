@@ -1,7 +1,7 @@
 import gymnasium as gym
 import pygame
 
-MODEL_PATH = "Test IA/gymnasium/test"
+MODEL_PATH = "Test_IA/gymnasium/test"
 
 class Terrain(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
