@@ -1,0 +1,6 @@
+{
+    "python.terminal.executeInFileDir": true,
+    "python.terminal.shellIntegration.enabled": false,
+    "terminal.integrated.shellIntegration.enabled": false,
+    "python.defaultInterpreterPath": "${workspaceFolder}/Test IA/gymnasium/.venv/bin/python"
+}
