@@ -1,7 +1,7 @@
 import pygame
 import math
 
-k = 5 #factor for more visual
+k = 3 #factor for more visual
 class Sim:
 
     def __init__(self, wide, longe):
