@@ -1,29 +1,49 @@
 import pygame
+import math
+
+k = 5 #factor for more visual
+class Sim:
+
+    def __init__(self, wide, longe):
+
+        pygame.init()
+        #self.k = k
+        self.surface = pygame.display.set_mode((wide*k, longe*k))
+        
+        self.long = pygame.display.get_window_size()[0]
+        self.larg = pygame.display.get_window_size()[1]
+    
+    def draw(self):
+
+        self.surface.fill((0, 0, 0))
+        pygame.draw.rect(self.surface, (0, 128, 0), ((0, 0), (self.long, self.larg)))
+
+        pygame.draw.rect(self.surface, (255, 255, 255), ((self.long/2-109.5*k, self.larg/2-79*k), (219*k, 158*k)))
+        pygame.draw.rect(self.surface, (0, 128, 0), ((self.long/2-107.5*k, self.larg/2-77*k), (215*k, 154*k)))
+
+
+        pygame.draw.line(self.surface, (255, 255, 255), (self.long-12*k-2*k, self.larg/2-40*k), (self.long-27*k, self.larg/2-40*k), width=2*k)
+        pygame.draw.line(self.surface, (255, 255, 255), (self.long-12*k-2*k, self.larg/2+40*k), (self.long-27*k, self.larg/2+40*k), width=2*k)
+        pygame.draw.line(self.surface, (255, 255, 255), (self.long-39*k+1*k, self.larg/2-30*k), (self.long-39*k+1*k, self.larg/2+30*k), width=2*k)
+        pygame.draw.arc(self.surface, (255, 255, 255), (self.long-39*k, self.larg/2-41*k, 25*k, 25*k), math.pi/2, math.pi, 2*k)
+        pygame.draw.arc(self.surface, (255, 255, 255), (self.long-39*k, self.larg/2+16*k, 25*k, 25*k), math.pi, 3*math.pi/2, 2*k)
+
+        pygame.draw.line(self.surface, (255, 255, 255), (12*k+2*k, self.larg/2-40*k), (27*k, self.larg/2-40*k), width=2*k)
+        pygame.draw.line(self.surface, (255, 255, 255), (12*k+2*k, self.larg/2+40*k), (27*k, self.larg/2+40*k), width=2*k)
+        pygame.draw.line(self.surface, (255, 255, 255), (39*k-1*k, self.larg/2-30*k), (39*k-1*k, self.larg/2+30*k), width=2*k)
+        pygame.draw.arc(self.surface, (255, 255, 255), (14*k, self.larg/2-41*k, 25*k, 25*k), 0, math.pi/2, 2*k)
+        pygame.draw.arc(self.surface, (255, 255, 255), (14*k, self.larg/2+16*k, 25*k, 25*k), 3*math.pi/2, 2*math.pi, 2*k)
+
+        pygame.draw.rect(self.surface, (0, 0, 0), ((0, ((self.larg/2)-32.5*k)), (12*k, 65*k)))
+        pygame.draw.rect(self.surface, (0, 0, 255), ((4.6*k, ((self.larg/2)-30*k)), (7.4*k, 60*k)))
+
+        pygame.draw.rect(self.surface, (0, 0, 0), ((self.long-12*k, ((self.larg/2)-32.5*k)), (12*k, 65*k)))
+        pygame.draw.rect(self.surface, (255, 255, 0), ((self.long-12*k, ((self.larg/2)-30*k)), (7.4*k, 60*k)))
 
 running = True
-k = 5 #factor for more visual
 
-pygame.init()
-surface = pygame.display.set_mode((243*k, 182*k))
-surface.fill((0, 0, 0))
-long = pygame.display.get_window_size()[0]
-larg = pygame.display.get_window_size()[1]
-
-pygame.draw.rect(surface, (0, 128, 0), ((0, 0), (long, larg)))
-
-pygame.draw.rect(surface, (255, 255, 255), ((long/2-109.5*k, larg/2-79*k), (219*k, 158*k)))
-pygame.draw.rect(surface, (0, 128, 0), ((long/2-107.5*k, larg/2-77*k), (215*k, 154*k)))
-
-#pygame.draw.rect(surface, (0, 255, 0), ((long-37*k, larg/2-40*k), (25*k, 80*k)), border_radius = 15)
-
-
-
-pygame.draw.rect(surface, (0, 0, 0), ((0, ((larg/2)-30*k)), (10*k, 60*k)))
-pygame.draw.rect(surface, (0, 0, 255), ((3.6*k, ((larg/2)-30*k)), (7.4*k, 60*k)))
-
-pygame.draw.rect(surface, (0, 0, 0), ((long-10*k, ((larg/2)-30*k)), (10*k, 60*k)))
-pygame.draw.rect(surface, (255, 255, 0), ((long-10*k, ((larg/2)-30*k)), (7.4*k, 60*k)))
-
+sim = Sim(243, 182)
+sim.draw()
 while running:
     for event in pygame.event.get():    
         if event.type == pygame.QUIT:
