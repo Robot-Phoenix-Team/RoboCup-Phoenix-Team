@@ -1,17 +1,4 @@
-"""Environnement Gymnasium : robot omnidirectionnel (4 roues mecanum) qui doit marquer.
 
-Port Python fidèle de la physique du simulateur JavaScript (Robot Simulator) :
-mêmes constantes, même cinématique mecanum, même rebond de balle, même collision
-robot/balle et même détection de but. Le pas de temps par défaut est 1/30 s,
-soit le dt maximal utilisé par la boucle du simulateur (0.033 s).
-
-Espace d'action  : Box(-1, 1, (4,)) -> vitesse des 4 roues en % / 100
-                   (équivalent de setmotor_speed1..4 : 1=avant-gauche,
-                   2=avant-droit, 3=arrière-gauche, 4=arrière-droit).
-Espace d'observation : Box(16,) voir _get_obs().
-Terminaison      : but dans la cage de droite (+), but dans la cage de gauche (-).
-Troncature       : max_steps pas sans but.
-"""
 from __future__ import annotations
 
 import math

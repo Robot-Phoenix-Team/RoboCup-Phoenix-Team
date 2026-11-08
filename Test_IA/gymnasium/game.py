@@ -5,13 +5,15 @@ k = 5 #factor for more visual
 class Sim:
 
     def __init__(self, wide, longe):
-
+        
         pygame.init()
         #self.k = k
+        
         self.surface = pygame.display.set_mode((wide*k, longe*k))
         
         self.long = pygame.display.get_window_size()[0]
         self.larg = pygame.display.get_window_size()[1]
+        self.ball = pygame.Vector2(self.long/2, self.larg/2)
     
     def draw(self):
 
@@ -39,14 +41,36 @@ class Sim:
 
         pygame.draw.rect(self.surface, (0, 0, 0), ((self.long-12*k, ((self.larg/2)-32.5*k)), (12*k, 65*k)))
         pygame.draw.rect(self.surface, (255, 255, 0), ((self.long-12*k, ((self.larg/2)-30*k)), (7.4*k, 60*k)))
+        
+        
+        
+    
+    def physic(self):
+       self.ball.x += 5
+       pygame.draw.circle(self.surface, (255, 165, 0), self.ball, 4.2*k)
+
+        
+
+
 
 running = True
 
+clock = pygame.time.Clock()
+
+
 sim = Sim(243, 182)
-sim.draw()
+
+
 while running:
     for event in pygame.event.get():    
         if event.type == pygame.QUIT:
             running = False
-    pygame.display.update()
+    
+    
+    clock.tick(30)
+    pygame.display.flip()
+    sim.draw()
+    sim.physic()
+    
+
   #  print(pygame.display.get_window_size())
