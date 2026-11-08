@@ -37,43 +37,49 @@ class Sim:
 
         self.font = pygame.font.SysFont("Arial", 25)
 
-        # zones de couleur = pas de rebond, la balle peut entrer
-
 
     def draw(self):
         self.surface.fill((0, 0, 0))
-        pygame.draw.rect(self.surface, (0, 128, 0), ((0, 0), (self.long, self.larg)))
+        pygame.draw.rect(self.surface, (0, 128, 0), ((0, 0), (self.long, self.larg))) # le terrain de jeu
 
+        #les lignes de jeu
         pygame.draw.rect(self.surface, (255, 255, 255), ((self.long/2-109.5*self.k, self.larg/2-79*self.k), (219*self.k, 158*self.k)))
         pygame.draw.rect(self.surface, (0, 128, 0), ((self.long/2-107.5*self.k, self.larg/2-77*self.k), (215*self.k, 154*self.k)))
 
+
+        #la première surface de réparation
         pygame.draw.line(self.surface, (255, 255, 255), (self.long-14*self.k, self.larg/2-40*self.k), (self.long-27*self.k, self.larg/2-40*self.k), width=2*self.k)
         pygame.draw.line(self.surface, (255, 255, 255), (self.long-14*self.k, self.larg/2+40*self.k), (self.long-27*self.k, self.larg/2+40*self.k), width=2*self.k)
         pygame.draw.line(self.surface, (255, 255, 255), (self.long-38*self.k, self.larg/2-30*self.k), (self.long-38*self.k, self.larg/2+30*self.k), width=2*self.k)
         pygame.draw.arc(self.surface, (255, 255, 255), (self.long-39*self.k, self.larg/2-41*self.k, 25*self.k, 25*self.k), math.pi/2, math.pi, 2*self.k)
         pygame.draw.arc(self.surface, (255, 255, 255), (self.long-39*self.k, self.larg/2+16*self.k, 25*self.k, 25*self.k), math.pi, 3*math.pi/2, 2*self.k)
 
+        #la deuxième surface de réparation
         pygame.draw.line(self.surface, (255, 255, 255), (14*self.k, self.larg/2-40*self.k), (27*self.k, self.larg/2-40*self.k), width=2*self.k)
         pygame.draw.line(self.surface, (255, 255, 255), (14*self.k, self.larg/2+40*self.k), (27*self.k, self.larg/2+40*self.k), width=2*self.k)
         pygame.draw.line(self.surface, (255, 255, 255), (38*self.k, self.larg/2-30*self.k), (38*self.k, self.larg/2+30*self.k), width=2*self.k)
         pygame.draw.arc(self.surface, (255, 255, 255), (14*self.k, self.larg/2-41*self.k, 25*self.k, 25*self.k), 0, math.pi/2, 2*self.k)
         pygame.draw.arc(self.surface, (255, 255, 255), (14*self.k, self.larg/2+16*self.k, 25*self.k, 25*self.k), 3*math.pi/2, 2*math.pi, 2*self.k)
 
+
+        #les buts bleu
         pygame.draw.rect(self.surface, (0, 0, 0), ((0, self.larg/2-32.5*self.k), (12*self.k, 65*self.k)))
         pygame.draw.rect(self.surface, (0, 0, 255), ((4.6*self.k, self.larg/2-30*self.k), (7.4*self.k, 60*self.k)))
 
+        #les buts jaune
         pygame.draw.rect(self.surface, (0, 0, 0), ((self.long-12*self.k, self.larg/2-32.5*self.k), (12*self.k, 65*self.k)))
         pygame.draw.rect(self.surface, (255, 255, 0), ((self.long-12*self.k, self.larg/2-30*self.k), (7.4*self.k, 60*self.k)))
 
-        position_robot_affichage = self.font.render(str(self.robot), True, (255, 255, 255))
+        position_robot_affichage = self.font.render(f"position robot 1: {round(self.robot.x, 1)}, {round(self.robot.y, 1)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (20, 20))
 
-    def physic_balle(self, dt):
+        position_robot_affichage = self.font.render(f"position balle: {round(self.ball.x, 1)}, {round(self.ball.y, 1)}", True, (255, 255, 255))
+        self.surface.blit(position_robot_affichage, (420, 20))
+
+    def physic(self, dt):
         self.ball += self.velocity * dt
         pygame.draw.circle(self.surface, (255, 165, 0), self.ball, 2.1*self.k)
         self.velocity *= self.friction ** dt
-
-    def physic_robot(self):
         pygame.draw.circle(self.surface, (255, 0, 0), self.robot, 17.5/2*self.k)
 
     def kick(self, forcex, forcey):
@@ -101,10 +107,10 @@ class Sim:
             if vn < 0:
                 self.velocity -= 0.8*vn*n
         for wall in self.walls:
-            self.collision_rect(wall)   # la fonction "point le plus proche" vue avant
+            self.collision_but(wall)   # la fonction "point le plus proche" vue avant
 
 
-    def collision_rect(self, rect):
+    def collision_but(self, rect): #oui ya besoin d'une fonction 
         r = 4.2 * self.k
 
         # point du rectangle le plus proche du centre de la balle
@@ -151,18 +157,9 @@ class Sim:
 
         return False
 
-    def deplacer_robot(self, dt):
-        keys = pygame.key.get_pressed()
-        direction = pygame.Vector2(0, 0)
-
-        if keys[pygame.K_UP]:
-            direction.y -= 1
-        if keys[pygame.K_DOWN]:
-            direction.y += 1
-        if keys[pygame.K_LEFT]:
-            direction.x -= 1
-        if keys[pygame.K_RIGHT]:
-            direction.x += 1
+    def deplacer_robot(self, dt, vel_x, vel_y):
+        
+        direction = pygame.Vector2(vel_x, vel_y)
 
         if direction.length() > 0:
             direction = direction.normalize()
@@ -192,11 +189,19 @@ while running:
     dt = clock.tick(60)/1000
 
     sim.draw()
-    sim.deplacer_robot(dt)
-    sim.physic_balle(dt)
-    sim.physic_robot()
+    sim.physic(dt)
     sim.collision()
     sim.but()
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP]:
+        sim.deplacer_robot(dt, 0, -1)
+    if keys[pygame.K_DOWN]:
+        sim.deplacer_robot(dt, 0, 1)
+    if keys[pygame.K_LEFT]:
+        sim.deplacer_robot(dt, -1, 0)        
+    if keys[pygame.K_RIGHT]:
+        sim.deplacer_robot(dt, 1, 0)   
 
     pygame.display.flip()
 
