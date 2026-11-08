@@ -105,13 +105,13 @@ class Sim:
             vn = (self.velocity-self.robot_vel).dot(n)
 
             if vn < 0:
-                self.velocity -= 0.8*vn*n
+                self.velocity -= 1.8*vn*n
         for wall in self.walls:
             self.collision_but(wall)   # la fonction "point le plus proche" vue avant
 
 
     def collision_but(self, rect): #oui ya besoin d'une fonction 
-        r = 4.2 * self.k
+        r = 2.1 * self.k
 
         # point du rectangle le plus proche du centre de la balle
         closest = pygame.Vector2(
@@ -194,14 +194,9 @@ while running:
     sim.but()
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
-        sim.deplacer_robot(dt, 0, -1)
-    if keys[pygame.K_DOWN]:
-        sim.deplacer_robot(dt, 0, 1)
-    if keys[pygame.K_LEFT]:
-        sim.deplacer_robot(dt, -1, 0)        
-    if keys[pygame.K_RIGHT]:
-        sim.deplacer_robot(dt, 1, 0)   
+    vx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+    vy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+    sim.deplacer_robot(dt, vx, vy) 
 
     pygame.display.flip()
 
