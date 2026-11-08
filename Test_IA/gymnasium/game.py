@@ -18,9 +18,9 @@ class Sim:
         self.velocity = pygame.Vector2(0, 0)
         self.friction = 0.1 # pour être plus réaliste
         
-        self.robot = pygame.Vector2(100, 100)
+        self.robot = pygame.Vector2(500, self.larg/2)
         self.robot_speed = 200
-        self.last_robot = self.robot.copy() # pour calculer la vélo
+        self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
         self.robot_vel = pygame.Vector2(0, 0)
 
         # parties noires = murs pleins (fond + barre du haut + barre du bas)
