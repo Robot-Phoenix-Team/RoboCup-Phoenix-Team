@@ -1,6 +1,11 @@
-
 import pygame
 import math
+import code_robot
+from code_robot import speed
+
+#bloquer la vitesse du robot pour pas qu'il aille trop vite
+if speed >= 0.5:
+    speed = 0.5
 
 class Sim:
 
@@ -21,6 +26,11 @@ class Sim:
         self.robot = pygame.Vector2(500, self.larg/2)
         self.robot_speed = 200
         self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
+        self.robot_vel = pygame.Vector2(0, 0)
+
+        #acceleration deceleration
+        self.robot_acceleration = 300  # accélération
+        self.robot_deceleration = 400 # décélération
         self.robot_vel = pygame.Vector2(0, 0)
 
         # parties noires = murs pleins (fond + barre du haut + barre du bas)
@@ -164,7 +174,11 @@ class Sim:
         if direction.length() > 0:
             direction = direction.normalize()
 
-        self.robot += direction*self.robot_speed*dt
+        #formue pour l'acceleration et la deceleration du robot pondue par chatgpt 1h su mat flm de chercher
+        target = direction * self.robot_speed
+        rate = self.robot_acceleration if direction.length() > 0 else self.robot_deceleration
+        self.robot_vel += (target - self.robot_vel).normalize() * min((target - self.robot_vel).length(), rate * dt) if (target - self.robot_vel).length() > 0 else pygame.Vector2()
+        self.robot += self.robot_vel * dt
 
         rayon = 17.5/2*self.k
         self.robot.x = max(rayon, min(self.robot.x, self.long-rayon))
@@ -193,9 +207,7 @@ while running:
     sim.collision()
     sim.but()
 
-    keys = pygame.key.get_pressed()
-    vx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-    vy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+    vx, vy = code_robot.get_velocity(pygame.key.get_pressed())
     sim.deplacer_robot(dt, vx, vy) 
 
     pygame.display.flip()
