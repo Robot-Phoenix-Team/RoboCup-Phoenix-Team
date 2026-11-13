@@ -1,6 +1,6 @@
 import pygame
 
-speed = 0.3
+speed = 200
 
 def get_velocity(keys):
     vx = (keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]) * speed

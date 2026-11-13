@@ -2,10 +2,10 @@ import pygame
 import math
 import code_robot
 from code_robot import speed
-
+max_speed = 200
 #bloquer la vitesse du robot pour pas qu'il aille trop vite
-if speed >= 0.5:
-    speed = 0.5
+if speed >= max_speed:
+    speed = max_speed
 
 class Sim:
 
@@ -29,8 +29,8 @@ class Sim:
         self.robot_vel = pygame.Vector2(0, 0)
 
         #acceleration deceleration
-        self.robot_acceleration = 300  # accélération
-        self.robot_deceleration = 400 # décélération
+        self.robot_acceleration = 2000 * speed  # accélération
+        self.robot_deceleration = 1000 # décélération
         self.robot_vel = pygame.Vector2(0, 0)
 
         # parties noires = murs pleins (fond + barre du haut + barre du bas)
@@ -178,6 +178,8 @@ class Sim:
         target = direction * self.robot_speed
         rate = self.robot_acceleration if direction.length() > 0 else self.robot_deceleration
         self.robot_vel += (target - self.robot_vel).normalize() * min((target - self.robot_vel).length(), rate * dt) if (target - self.robot_vel).length() > 0 else pygame.Vector2()
+        if self.robot_vel.length() > max_speed:
+            self.robot_vel.scale_to_length(max_speed)
         self.robot += self.robot_vel * dt
 
         rayon = 17.5/2*self.k
