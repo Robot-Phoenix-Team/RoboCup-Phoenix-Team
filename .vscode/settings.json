@@ -2,5 +2,6 @@
     "python.terminal.executeInFileDir": true,
     "python.terminal.shellIntegration.enabled": false,
     "terminal.integrated.shellIntegration.enabled": false,
-    "python.defaultInterpreterPath": "${workspaceFolder}/Test_IA/gymnasium/.venv/bin/python"
+    "python.defaultInterpreterPath": "${workspaceFolder}/Test_IA/gymnasium/.venv/bin/python",
+    "python.terminal.useEnvFile": true
 }
