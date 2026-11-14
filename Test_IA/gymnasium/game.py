@@ -29,6 +29,10 @@ class Sim:
         self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
         self.robot_vel = pygame.Vector2(0, 0)
 
+
+        self.on_line = False  # True si le robot est sur une ligne blanche
+
+
         #acceleration deceleration
         self.robot_acceleration = 2000 * speed  # accélération
         self.robot_deceleration = 5 * speed  # décélération
@@ -81,11 +85,19 @@ class Sim:
         pygame.draw.rect(self.surface, (0, 0, 0), ((self.long-12*self.k, self.larg/2-32.5*self.k), (12*self.k, 65*self.k)))
         pygame.draw.rect(self.surface, (255, 255, 0), ((self.long-12*self.k, self.larg/2-30*self.k), (7.4*self.k, 60*self.k)))
 
-        position_robot_affichage = self.font.render(f"position robot 1: {round(self.robot.x, 1)}, {round(self.robot.y, 1)}", True, (255, 255, 255))
+        position_robot_affichage = self.font.render(f"position robot 1: {round(self.robot.x)}, {round(self.robot.y)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (20, 20))
 
-        position_robot_affichage = self.font.render(f"position balle: {round(self.ball.x, 1)}, {round(self.ball.y, 1)}", True, (255, 255, 255))
+        position_robot_affichage = self.font.render(f"position balle: {round(self.ball.x)}, {round(self.ball.y)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (420, 20))
+
+        position_robot_affichage = self.font.render(f"est sur la ligne: {self.on_line}", True, (255, 255, 255))
+        self.surface.blit(position_robot_affichage, (820, 20))
+
+        # détection de ligne blanche : on lit le pixel sous le centre du robot
+        # (à ce moment-là, ni le robot ni la balle ne sont encore dessinés)
+        x, y = int(self.robot.x), int(self.robot.y)
+        self.on_line = tuple(self.surface.get_at((x, y)))[:3] == (255, 255, 255)
 
     def physic(self, dt):
         self.ball += self.velocity * dt

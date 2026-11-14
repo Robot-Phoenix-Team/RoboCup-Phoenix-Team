@@ -16,6 +16,15 @@ CONE = math.radians(30)       # demi-angle du cône "derrière la balle" où on 
 ORBIT_STEP = 0.7              # rad : avance du point visé quand on contourne la balle
 MAX_LEAD = 0.4                # s : anticipation max du mouvement de la balle
 
+# --- Mémoire pour la gestion des lignes blanches ---
+_dir = pygame.Vector2(0, 0)   # dernière commande envoyée quand le robot n'était pas sur une ligne
+_bloc = None                  # direction dans laquelle on a touché la ligne (interdite tant qu'on la veut)
+
+
+def sur_ligne():
+    """True si le capteur de ligne du simulateur voit du blanc."""
+    return __main__.sim.on_line
+
 
 def _wrap(a):
     """Ramène un angle dans [-pi, pi]."""
@@ -92,11 +101,31 @@ def _plan():
 def get_velocity(keys):
     # sim.py normalise le vecteur s'il dépasse 1 puis le multiplie par `speed` :
     # on renvoie donc un vecteur de longueur <= 1.
+    global _dir, _bloc
+
     direction, throttle, _ = _plan()
     if throttle == 0.0 or direction.length() < 1e-6:
-        return 0, 0
-    direction.scale_to_length(throttle)
-    return direction.x, direction.y
+        v = pygame.Vector2(0, 0)
+    else:
+        v = direction.normalize() * throttle
+
+    if sur_ligne():
+        # Ligne touchée : on retient la direction dans laquelle on allait, puis on recule
+        # jusqu'à ne plus la voir. Aucune position n'est utilisée, que le capteur.
+        if _bloc is None and _dir.length() > 1e-6:
+            _bloc = _dir.normalize()
+        if _bloc is not None:
+            v = -_bloc
+    else:
+        if _bloc is not None:
+            along = v.dot(_bloc)
+            if along > 0:
+                v -= _bloc * along      # on veut avancer vers la ligne : on glisse le long, sans la traverser
+            elif along < -0.2:
+                _bloc = None            # le robot veut s'éloigner de la ligne : on débloque
+        _dir = pygame.Vector2(v)
+
+    return v.x, v.y
 
 
 def get_rotation(keys):
