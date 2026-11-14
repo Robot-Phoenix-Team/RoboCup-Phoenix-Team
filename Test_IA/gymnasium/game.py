@@ -1,6 +1,7 @@
 import pygame
 import math
 import code_robot
+import code_robot2
 from code_robot import speed
 max_speed = 1000
 #bloquer la vitesse du robot pour pas qu'il aille trop vite
@@ -23,14 +24,23 @@ class Sim:
         self.velocity = pygame.Vector2(0, 0)
         self.friction = 1.8 # pour être plus réaliste
         self.robot = pygame.Vector2(500, self.larg/2)
+        self.robot2 = pygame.Vector2(self.long - 500, self.larg/2)
         self.robot_speed = speed
+        self.robot2_speed = speed
         self.flat = 6*k
         self.angle = 0
+        self.angle2 = 0
         self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
         self.robot_vel = pygame.Vector2(0, 0)
-
-
-        self.on_line = False  # True si le robot est sur une ligne blanche
+        self.last_robot2 = self.robot2.copy()
+        self.robot2_vel = pygame.Vector2(0, 0)
+        #forces de poussée
+        self.robot_push = pygame.Vector2(0, 0)
+        self.robot2_push = pygame.Vector2(0, 0)
+        self.m1 = 1
+        self.m2 = 1
+        self.e_robots = 0.3
+        self.push_friction = 2400
 
 
         #acceleration deceleration
@@ -87,18 +97,13 @@ class Sim:
 
         #infos textuelles
         position_robot_affichage = self.font.render(f"position robot 1: x {round(self.robot.x)} y {round(self.robot.y)}", True, (255, 255, 255))
-        self.surface.blit(position_robot_affichage, (20, 20))
+        self.surface.blit(position_robot_affichage, (20, 0))
+
+        position_robot_affichage = self.font.render(f"position robot 2: x {round(self.robot2.x)} y {round(self.robot2.y)}", True, (255, 255, 255))
+        self.surface.blit(position_robot_affichage, (20, 30))
 
         position_robot_affichage = self.font.render(f"position balle: x {round(self.ball.x)} y {round(self.ball.y)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (420, 20))
-
-        position_robot_affichage = self.font.render(f"est sur la ligne: {self.on_line}", True, (255, 255, 255))
-        self.surface.blit(position_robot_affichage, (820, 20))
-
-        # détection de ligne blanche : on lit le pixel sous le centre du robot
-        # (à ce moment-là, ni le robot ni la balle ne sont encore dessinés)
-        x, y = int(self.robot.x), int(self.robot.y)
-        self.on_line = tuple(self.surface.get_at((x, y)))[:3] == (255, 255, 255)
 
     def physic(self, dt):
         self.ball += self.velocity * dt
@@ -108,6 +113,8 @@ class Sim:
         t0 = math.acos(-self.flat/R)
         pts = [(self.robot.x + R*math.cos(self.angle - t0 + 2*t0*i/20), self.robot.y + R*math.sin(self.angle - t0 + 2*t0*i/20)) for i in range(21)]
         pygame.draw.polygon(self.surface, (255, 0, 0), pts)
+        pts2 = [(self.robot2.x + R*math.cos(self.angle2 - t0 + 2*t0*i/20), self.robot2.y + R*math.sin(self.angle2 - t0 + 2*t0*i/20)) for i in range(21)]
+        pygame.draw.polygon(self.surface, (255, 0, 0), pts2)
 
     def kick(self, forcex, forcey):
         self.velocity.xy = forcex, forcey
@@ -115,13 +122,10 @@ class Sim:
     def collision(self):
         r_ball, r_robot = 4.2/2*self.k, 17.5/2*self.k
 
-        if self.ball.x < r_ball or self.ball.x > self.long-r_ball:
-            self.ball.x = max(r_ball, min(self.ball.x, self.long-r_ball))
-            self.velocity.x *= -0.7
-
-        if self.ball.y < r_ball or self.ball.y > self.larg-r_ball:
-            self.ball.y = max(r_ball, min(self.ball.y, self.larg-r_ball))
-            self.velocity.y *= -0.7
+        if self.ball.x < 0 or self.ball.x > self.long or self.ball.y < 0 or self.ball.y > self.larg:
+            self.ball.update(self.long/2, self.larg/2)
+            self.velocity.xy = 0, 0
+            return
 
         delta = self.ball - self.robot
         e1 = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
@@ -143,6 +147,26 @@ class Sim:
             vn = (self.velocity-self.robot_vel).dot(n)
             if vn < 0:
                 self.velocity -= 1.4*vn*n
+
+        delta = self.ball - self.robot2
+        e1 = pygame.Vector2(math.cos(self.angle2), math.sin(self.angle2))
+        e2 = pygame.Vector2(-e1.y, e1.x)
+        lx, ly = delta.dot(e1), delta.dot(e2)
+
+        if lx < -d and abs(ly) <= h:
+            if lx > -d - r_ball:
+                n = -e1
+                self.ball = self.robot2 + e1*(-d - r_ball) + e2*ly
+                vn = (self.velocity - self.robot2_vel).dot(n)
+                if vn < 0:
+                    self.velocity -= 1.4*vn*n
+        elif 0 < delta.length() < r_ball + r_robot:
+            n = delta.normalize()
+            self.ball = self.robot2 + n*(r_ball+r_robot)
+            vn = (self.velocity-self.robot2_vel).dot(n)
+            if vn < 0:
+                self.velocity -= 1.4*vn*n
+
         for wall in self.walls:
             self.collision_but(wall)   # la fonction "point le plus proche" vue avant
 
@@ -194,6 +218,36 @@ class Sim:
 
         return False
 
+
+    def freiner(self, push, dt):
+        n = push.length()
+        if n <= self.push_friction * dt:
+            push.xy = 0, 0
+        else:
+            push.scale_to_length(n - self.push_friction * dt)
+
+    def collision_robots(self):
+        r = 2 * 17.5/2 * self.k
+        delta = self.robot2 - self.robot
+        dist = delta.length()
+        if dist == 0 or dist >= r:
+            return
+        n = delta / dist
+        overlap = r - dist
+        mt = self.m1 + self.m2
+        s1 = n * overlap * self.m2 / mt
+        s2 = n * overlap * self.m1 / mt
+        self.robot -= s1
+        self.last_robot -= s1
+        self.robot2 += s2
+        self.last_robot2 += s2
+        vn = (self.robot2_vel - self.robot_vel).dot(n)
+        if vn < 0:
+            j = -(1 + self.e_robots) * vn / (1/self.m1 + 1/self.m2)
+            self.robot_push -= n * j / self.m1
+            self.robot2_push += n * j / self.m2
+
+
     def deplacer_robot(self, dt, vel_x, vel_y):
         
         direction = pygame.Vector2(vel_x, vel_y)
@@ -207,7 +261,8 @@ class Sim:
         self.robot_vel += (target - self.robot_vel).normalize() * min((target - self.robot_vel).length(), rate * dt) if (target - self.robot_vel).length() > 0 else pygame.Vector2()
         if self.robot_vel.length() > max_speed:
             self.robot_vel.scale_to_length(max_speed)
-        self.robot += self.robot_vel * dt
+        self.robot += (self.robot_vel + self.robot_push) * dt
+        self.freiner(self.robot_push, dt)
         #print("Vitesse :", self.robot_vel.length(), "Déplacement :", (self.robot_vel * dt).length())
 
         rayon = 17.5/2*self.k
@@ -216,6 +271,18 @@ class Sim:
 
         self.robot_vel = (self.robot-self.last_robot)/dt if dt > 0 else pygame.Vector2(0, 0)
         self.last_robot = self.robot.copy()
+
+    def deplacer_robot2(self, dt, vel_x, vel_y):
+        direction = pygame.Vector2(vel_x, vel_y)
+        if direction.length() > 1:
+            direction = direction.normalize()
+        self.robot2 += (direction * self.robot2_speed + self.robot2_push) * dt
+        self.freiner(self.robot2_push, dt)
+        rayon = 17.5/2*self.k
+        self.robot2.x = max(rayon, min(self.robot2.x, self.long-rayon))
+        self.robot2.y = max(rayon, min(self.robot2.y, self.larg-rayon))
+        self.robot2_vel = (self.robot2-self.last_robot2)/dt if dt > 0 else pygame.Vector2(0, 0)
+        self.last_robot2 = self.robot2.copy()
 
 
 running = True
@@ -243,6 +310,10 @@ while running:
     vx, vy = code_robot.get_velocity(pygame.key.get_pressed())
     sim.angle += code_robot.get_rotation(pygame.key.get_pressed()) * dt
     sim.deplacer_robot(dt, vx, vy) 
+    vx2, vy2 = code_robot2.get_velocity(pygame.key.get_pressed())
+    sim.angle2 += code_robot2.get_rotation(pygame.key.get_pressed()) * dt
+    sim.deplacer_robot2(dt, vx2, vy2)
+    sim.collision_robots()
 
     pygame.display.flip()
 

@@ -16,16 +16,6 @@ CONE = math.radians(30)       # demi-angle du cône "derrière la balle" où on 
 ORBIT_STEP = 0.7              # rad : avance du point visé quand on contourne la balle
 MAX_LEAD = 0.4                # s : anticipation max du mouvement de la balle
 
-# --- Mémoire pour la gestion des lignes blanches ---
-_dir = pygame.Vector2(0, 0)   # dernière commande envoyée quand le robot n'était pas sur une ligne
-_bloc = None                  # direction dans laquelle on a touché la ligne (interdite tant qu'on la veut)
-
-
-def sur_ligne():
-    """True si le capteur de ligne du simulateur voit du blanc."""
-    return __main__.sim.on_line
-
-
 def _wrap(a):
     """Ramène un angle dans [-pi, pi]."""
     return (a + math.pi) % (2 * math.pi) - math.pi
@@ -35,6 +25,40 @@ def _goal(sim):
     """Centre de l'ouverture du but adverse."""
     x = sim.long - 8 * sim.k if BUT_ADVERSE == "droite" else 8 * sim.k
     return pygame.Vector2(x, sim.larg / 2)
+
+
+def _inside_field(sim, robot, direction, radius):
+    left = sim.long / 2 - 107.5 * sim.k + radius
+    right = sim.long / 2 + 107.5 * sim.k - radius
+    top = sim.larg / 2 - 77 * sim.k + radius
+    bottom = sim.larg / 2 + 77 * sim.k - radius
+    if robot.x <= left and direction.x < 0:
+        direction.x = 0
+    if robot.x >= right and direction.x > 0:
+        direction.x = 0
+    if robot.y <= top and direction.y < 0:
+        direction.y = 0
+    if robot.y >= bottom and direction.y > 0:
+        direction.y = 0
+
+    surfaces = (
+        (14 * sim.k - radius, 38 * sim.k + radius),
+        (sim.long - 38 * sim.k - radius, sim.long - 14 * sim.k + radius),
+    )
+    surface_top = sim.larg / 2 - 30 * sim.k - radius
+    surface_bottom = sim.larg / 2 + 30 * sim.k + radius
+    for surface_left, surface_right in surfaces:
+        inside_y = surface_top < robot.y < surface_bottom
+        if inside_y and robot.x <= surface_left and direction.x > 0:
+            direction.x = 0
+        if inside_y and robot.x >= surface_right and direction.x < 0:
+            direction.x = 0
+        inside_x = surface_left < robot.x < surface_right
+        if inside_x and robot.y <= surface_top and direction.y > 0:
+            direction.y = 0
+        if inside_x and robot.y >= surface_bottom and direction.y < 0:
+            direction.y = 0
+    return direction
 
 
 def _shot_direction(sim, ball, goal, contact, r_rob):
@@ -101,30 +125,13 @@ def _plan():
 def get_velocity(keys):
     # sim.py normalise le vecteur s'il dépasse 1 puis le multiplie par `speed` :
     # on renvoie donc un vecteur de longueur <= 1.
-    global _dir, _bloc
-
     direction, throttle, _ = _plan()
     if throttle == 0.0 or direction.length() < 1e-6:
         v = pygame.Vector2(0, 0)
     else:
         v = direction.normalize() * throttle
 
-    if sur_ligne():
-        # Ligne touchée : on retient la direction dans laquelle on allait, puis on recule
-        # jusqu'à ne plus la voir. Aucune position n'est utilisée, que le capteur.
-        if _bloc is None and _dir.length() > 1e-6:
-            _bloc = _dir.normalize()
-        if _bloc is not None:
-            v = -_bloc
-    else:
-        if _bloc is not None:
-            along = v.dot(_bloc)
-            if along > 0:
-                v -= _bloc * along      # on veut avancer vers la ligne : on glisse le long, sans la traverser
-            elif along < -0.2:
-                _bloc = None            # le robot veut s'éloigner de la ligne : on débloque
-        _dir = pygame.Vector2(v)
-
+    v = _inside_field(__main__.sim, pygame.Vector2(__main__.sim.robot), v, 17.5 / 2 * __main__.sim.k)
     return v.x, v.y
 
 
