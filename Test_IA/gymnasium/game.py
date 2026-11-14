@@ -2,7 +2,7 @@ import pygame
 import math
 import code_robot
 from code_robot import speed
-max_speed = 200
+max_speed = 1000
 #bloquer la vitesse du robot pour pas qu'il aille trop vite
 if speed >= max_speed:
     speed = max_speed
@@ -21,16 +21,17 @@ class Sim:
         
         self.ball = pygame.Vector2(self.long/2, self.larg/2) #position de la balle placé au centre du terrain
         self.velocity = pygame.Vector2(0, 0)
-        self.friction = 0.1 # pour être plus réaliste
-        
+        self.friction = 1.8 # pour être plus réaliste
         self.robot = pygame.Vector2(500, self.larg/2)
-        self.robot_speed = 200
+        self.robot_speed = speed
+        self.flat = 6*k
+        self.angle = 0
         self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
         self.robot_vel = pygame.Vector2(0, 0)
 
         #acceleration deceleration
         self.robot_acceleration = 2000 * speed  # accélération
-        self.robot_deceleration = 1000 # décélération
+        self.robot_deceleration = 5 * speed  # décélération
         self.robot_vel = pygame.Vector2(0, 0)
 
         # parties noires = murs pleins (fond + barre du haut + barre du bas)
@@ -89,8 +90,11 @@ class Sim:
     def physic(self, dt):
         self.ball += self.velocity * dt
         pygame.draw.circle(self.surface, (255, 165, 0), self.ball, 2.1*self.k)
-        self.velocity *= self.friction ** dt
-        pygame.draw.circle(self.surface, (255, 0, 0), self.robot, 17.5/2*self.k)
+        self.velocity *= max(0, 1 - self.friction * dt)
+        R = 17.5/2*self.k
+        t0 = math.acos(-self.flat/R)
+        pts = [(self.robot.x + R*math.cos(self.angle - t0 + 2*t0*i/20), self.robot.y + R*math.sin(self.angle - t0 + 2*t0*i/20)) for i in range(21)]
+        pygame.draw.polygon(self.surface, (255, 0, 0), pts)
 
     def kick(self, forcex, forcey):
         self.velocity.xy = forcex, forcey
@@ -107,15 +111,25 @@ class Sim:
             self.velocity.y *= -0.7
 
         delta = self.ball - self.robot
-        distance = delta.length()
+        e1 = pygame.Vector2(math.cos(self.angle), math.sin(self.angle))
+        e2 = pygame.Vector2(-e1.y, e1.x)
+        lx, ly = delta.dot(e1), delta.dot(e2)
+        d = self.flat
+        h = math.sqrt(r_robot**2 - d**2)
 
-        if 0 < distance < r_ball+r_robot:
+        if lx < -d and abs(ly) <= h:
+            if lx > -d - r_ball:
+                n = -e1
+                self.ball = self.robot + e1*(-d - r_ball) + e2*ly
+                vn = (self.velocity - self.robot_vel).dot(n)
+                if vn < 0:
+                    self.velocity -= 1.4*vn*n
+        elif 0 < delta.length() < r_ball + r_robot:
             n = delta.normalize()
             self.ball = self.robot + n*(r_ball+r_robot)
             vn = (self.velocity-self.robot_vel).dot(n)
-
             if vn < 0:
-                self.velocity -= 1.8*vn*n
+                self.velocity -= 1.4*vn*n
         for wall in self.walls:
             self.collision_but(wall)   # la fonction "point le plus proche" vue avant
 
@@ -181,6 +195,7 @@ class Sim:
         if self.robot_vel.length() > max_speed:
             self.robot_vel.scale_to_length(max_speed)
         self.robot += self.robot_vel * dt
+        #print("Vitesse :", self.robot_vel.length(), "Déplacement :", (self.robot_vel * dt).length())
 
         rayon = 17.5/2*self.k
         self.robot.x = max(rayon, min(self.robot.x, self.long-rayon))
@@ -210,6 +225,7 @@ while running:
     sim.but()
 
     vx, vy = code_robot.get_velocity(pygame.key.get_pressed())
+    sim.angle += code_robot.get_rotation(pygame.key.get_pressed()) * dt
     sim.deplacer_robot(dt, vx, vy) 
 
     pygame.display.flip()
