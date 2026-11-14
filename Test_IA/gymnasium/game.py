@@ -85,10 +85,11 @@ class Sim:
         pygame.draw.rect(self.surface, (0, 0, 0), ((self.long-12*self.k, self.larg/2-32.5*self.k), (12*self.k, 65*self.k)))
         pygame.draw.rect(self.surface, (255, 255, 0), ((self.long-12*self.k, self.larg/2-30*self.k), (7.4*self.k, 60*self.k)))
 
-        position_robot_affichage = self.font.render(f"position robot 1: {round(self.robot.x)}, {round(self.robot.y)}", True, (255, 255, 255))
+        #infos textuelles
+        position_robot_affichage = self.font.render(f"position robot 1: x {round(self.robot.x)} y {round(self.robot.y)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (20, 20))
 
-        position_robot_affichage = self.font.render(f"position balle: {round(self.ball.x)}, {round(self.ball.y)}", True, (255, 255, 255))
+        position_robot_affichage = self.font.render(f"position balle: x {round(self.ball.x)} y {round(self.ball.y)}", True, (255, 255, 255))
         self.surface.blit(position_robot_affichage, (420, 20))
 
         position_robot_affichage = self.font.render(f"est sur la ligne: {self.on_line}", True, (255, 255, 255))
