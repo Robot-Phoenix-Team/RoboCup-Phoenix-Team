@@ -185,7 +185,7 @@ class Sim:
         
         direction = pygame.Vector2(vel_x, vel_y)
 
-        if direction.length() > 0:
+        if direction.length() > 1:
             direction = direction.normalize()
 
         #formue pour l'acceleration et la deceleration du robot pondue par chatgpt 1h su mat flm de chercher
@@ -215,7 +215,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
-            sim.kick(0, 100)
+            direction = pygame.Vector2(pygame.mouse.get_pos()) - sim.ball
+            if direction.length_squared() > 0:
+                direction = direction.normalize()
+                sim.kick(*(direction * 100))
 
     dt = clock.tick(60)/1000
 
