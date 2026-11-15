@@ -28,7 +28,7 @@ class Sim:
         self.robot_speed = speed
         self.robot2_speed = speed
         self.flat = 6*k
-        self.angle = 0
+        self.angle = math.pi
         self.angle2 = 0
         self.last_robot = self.robot.copy() # pour calculer la vélocité du robot
         self.robot_vel = pygame.Vector2(0, 0)
