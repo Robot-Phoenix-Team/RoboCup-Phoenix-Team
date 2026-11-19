@@ -44,6 +44,5 @@ Remerciements
 
 Merci à :
 
-notre établissement Notre Dame des Oiseaux
 Notre encadrant et professeur M.Pinel
 les organisateurs de la RoboCup Junior
